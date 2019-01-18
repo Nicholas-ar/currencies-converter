@@ -17,19 +17,37 @@ void main() async {
   ));
 }
 
-Future<Map> getData() async {
-  http.Response response = await http.get(request);
-  return json.decode(response.body);
-}
-
 class Home extends StatefulWidget {
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
+
+  final realController = TextEditingController();
+  final dolarController = TextEditingController();
+  final euroController = TextEditingController();
+
   double dollar;
   double euro;
+
+  void _realChanged(String text){
+    double real = double.parse(text);
+    dolarController.text = (real/dollar).toStringAsPrecision(2);
+    euroController.text = (real/euro).toStringAsPrecision(2);
+  }
+
+  void _dolarChanged(String text){
+    double dolar = double.parse(text);
+    realController.text = (dolar * dollar).toStringAsPrecision(2);
+    euroController.text = (dolar * dollar / euro).toStringAsPrecision(2);
+  }
+
+  void _euroChanged(String text){
+    double euro = double.parse(text);
+    realController.text = (euro * this.euro).toStringAsPrecision(2);
+    dolarController.text = (euro * this.euro / dollar).toStringAsPrecision(2);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,11 +93,11 @@ class _HomeState extends State<Home> {
                       children: <Widget>[
                         Icon(Icons.monetization_on,
                             size: 150.0, color: Colors.amber),
-                        buildTextField("Reais", "R\$"),
+                        buildTextField("Reais", "R\$", realController, _realChanged),
                         Divider(),
-                        buildTextField("Dólares", "US\$"),
+                        buildTextField("Dólares", "US\$", dolarController, _dolarChanged),
                         Divider(),
-                        buildTextField("Euros", "€"),
+                        buildTextField("Euros", "€", euroController, _euroChanged),
                       ],
                     ),
                   );
@@ -90,13 +108,21 @@ class _HomeState extends State<Home> {
   }
 }
 
-Widget buildTextField(String label, String prefix) {
+Future<Map> getData() async {
+  http.Response response = await http.get(request);
+  return json.decode(response.body);
+}
+
+Widget buildTextField(String label, String prefix, TextEditingController control, Function func) {
   return TextField(
+    controller: control,
     decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: Colors.amber),
         border: OutlineInputBorder(),
         prefixText: prefix),
     style: TextStyle(color: Colors.amber, fontSize: 25.0),
+    onChanged: func,
+    keyboardType: TextInputType.number,
   );
 }
